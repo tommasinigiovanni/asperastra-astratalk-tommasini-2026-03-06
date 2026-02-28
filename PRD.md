@@ -17,17 +17,36 @@ API REST per prenotare slot temporali sulle stampanti 3D. Gestione conflitti, va
 
 ## Cosa il sistema NON È
 
-- Non è un sistema di autenticazione utenti (no login, no password)
 - Non gestisce pagamenti o fatturazione
 - Non monitora lo stato fisico della stampante (filamento, temperatura)
 - Non invia notifiche (email, SMS, push)
 - Non gestisce prenotazioni ricorrenti
 
-## Utenti target
+## Utenti target e ruoli
 
-Membri del FabLab che devono prenotare tempo-macchina. Identificati solo per nome (stringa).
+Due livelli di accesso:
+
+### Admin (staff Asperastra)
+- Gestiscono le stampanti (crea, modifica stato active/maintenance)
+- Vedono tutte le prenotazioni di tutti gli utenti
+- Possono cancellare qualsiasi prenotazione
+- Gestiscono gli utenti (crea, disabilita)
+
+### User (membri FabLab)
+- Prenotano slot sulle stampanti disponibili
+- Vedono le proprie prenotazioni
+- Cancellano solo le proprie prenotazioni (con regola 15 min)
+- Non possono gestire stampanti né altri utenti
 
 ## Entità principali
+
+### Utente
+- `id`: identificativo unico
+- `email`: email univoca, usata per login
+- `password_hash`: password hashata (bcrypt)
+- `name`: nome visualizzato
+- `role`: admin | user
+- `created_at`: timestamp creazione
 
 ### Stampante
 - `id`: identificativo unico
@@ -37,7 +56,7 @@ Membri del FabLab che devono prenotare tempo-macchina. Identificati solo per nom
 ### Prenotazione
 - `id`: identificativo unico
 - `printer_id`: riferimento alla stampante
-- `user_name`: chi ha prenotato
+- `user_id`: riferimento all'utente che ha prenotato
 - `start_time`: inizio slot (ISO 8601)
 - `end_time`: fine slot (ISO 8601)
 - `notes`: note opzionali (es. "stampa PLA grande")
@@ -51,6 +70,8 @@ Membri del FabLab che devono prenotare tempo-macchina. Identificati solo per nom
 4. Non si può prenotare nel passato
 5. Una stampante in `maintenance` non accetta prenotazioni
 6. Cancellazione possibile solo se mancano più di 15 minuti all'inizio
+7. Un user può cancellare solo le proprie prenotazioni; un admin può cancellare qualsiasi prenotazione
+8. Solo gli admin possono creare/modificare stampanti e gestire utenti
 
 ## Interfaccia utente
 

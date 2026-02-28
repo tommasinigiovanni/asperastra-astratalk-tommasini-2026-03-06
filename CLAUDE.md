@@ -4,6 +4,7 @@
 
 Sistema di prenotazione slot per stampanti 3D di un FabLab.
 Backend API REST + Frontend React (Refine + Ant Design). Monorepo con `/backend` e `/frontend`.
+Multi-utente con due ruoli: admin (staff Asperastra) e user (membri FabLab).
 
 ## Regola zero: pensa prima di scrivere
 
@@ -68,13 +69,17 @@ Regole backend:
 - Logica di business → `backend/src/services/` (mai nei route handler)
 - Validazione input → Zod schemas in `backend/src/models/`
 - Route handlers → sottili, delegano ai services
+- Auth middleware → `backend/src/middleware/auth.ts` (authenticate + authorize)
+- Tutte le route protette da JWT tranne `/api/auth/login`
+- Route admin protette da `authorize('admin')`
 - Test → `backend/src/tests/`, uno per ogni service
 
 Regole frontend:
 - Pagine CRUD → `frontend/src/pages/` (una cartella per risorsa)
 - Componenti riusabili → `frontend/src/components/`
 - No logica di business nei componenti React — delegare a hooks custom e utility
-- Data provider e config Refine → `frontend/src/providers/`
+- Auth provider e data provider Refine → `frontend/src/providers/`
+- Viste admin-only nascoste/protette in base al ruolo dell'utente loggato
 - Test → `frontend/src/tests/`, organizzati per pages e components
 
 ## Cosa NON fare
@@ -82,6 +87,8 @@ Regole frontend:
 - Non aggiungere feature non presenti nel PRD.md
 - Non installare dipendenze non previste dall'architettura
 - Non mettere logica di business nei componenti React (delegare a hooks e service)
+- Non salvare password in chiaro — sempre bcrypt
+- Non hardcodare JWT secret nel codice — usare variabili d'ambiente
 - Non saltare step del PLAN.md
 - Non ignorare test falliti per andare avanti
 - Non fare commit con test rotti

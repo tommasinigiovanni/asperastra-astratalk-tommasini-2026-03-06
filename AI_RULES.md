@@ -5,8 +5,9 @@
 - Ogni input dall'esterno DEVE passare attraverso uno schema Zod
 - Mai fidarsi dei dati in ingresso: validare tipo, range, formato
 - Date in formato ISO 8601 — rifiutare qualsiasi altro formato
-- `user_name` non può essere stringa vuota o solo spazi
 - `printer_id` deve esistere nel database prima di creare una prenotazione
+- `email` deve essere un formato email valido
+- `password` minimo 8 caratteri al momento della registrazione
 
 ## Prenotazioni: regole di conflitto
 
@@ -21,6 +22,18 @@
 
 - Possibile solo se mancano più di 15 minuti all'inizio dello slot
 - Se mancano meno di 15 minuti → errore 409 con messaggio "troppo tardi per cancellare"
+- Un user può cancellare solo le proprie prenotazioni → 403 se tenta di cancellare quelle altrui
+- Un admin può cancellare qualsiasi prenotazione
+
+## Autenticazione e autorizzazione
+
+- Tutte le route (tranne `/api/auth/login`) richiedono un JWT valido → 401 se mancante o scaduto
+- Le route admin (`POST /api/printers`, `PATCH /api/printers/:id`, `/api/users`) richiedono `role: admin` → 403 se user
+- Il middleware `authenticate` estrae l'utente dal token e lo rende disponibile come `req.user`
+- Il middleware `authorize('admin')` controlla il ruolo — va applicato DOPO `authenticate`
+- Password mai in chiaro: usare bcrypt per hash e verifica
+- JWT secret configurabile via variabile d'ambiente `JWT_SECRET` — mai hardcoded nel codice
+- Il token NON deve contenere dati sensibili (no password_hash)
 
 ## Testing
 
@@ -35,7 +48,14 @@
   - Slot troppo lungo (> 8 ore)
   - Start nel passato
   - Stampante in maintenance
-  - User name vuoto
+- I test per autenticazione/autorizzazione devono coprire:
+  - Login con credenziali corrette → JWT valido
+  - Login con credenziali errate → 401
+  - Accesso route protetta senza token → 401
+  - Accesso route admin con ruolo user → 403
+  - User cancella propria prenotazione → OK
+  - User cancella prenotazione altrui → 403
+  - Admin cancella prenotazione di un user → OK
 - Usa database in-memory per i test (`:memory:`)
 - Ogni test deve essere indipendente: setup e teardown propri
 
