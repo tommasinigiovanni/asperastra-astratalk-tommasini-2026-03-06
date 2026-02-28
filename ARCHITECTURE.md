@@ -8,7 +8,8 @@
 |-------|-----------|--------|
 | Runtime | Node.js + TypeScript | Type safety, ecosystem maturo |
 | HTTP | Express | Semplicità, veloce da implementare |
-| Database | SQLite (better-sqlite3) | Zero config, file singolo, perfetto per FabLab |
+| Database | PostgreSQL (pg driver) | Robusto, pronto per produzione, containerizzato con Docker |
+| ORM | Drizzle ORM | Type-safe, migrazioni integrate, schema in TypeScript |
 | Validazione | Zod | Schema-first, inferenza tipi automatica |
 | Test | Vitest | Veloce, compatibile TypeScript nativo |
 | Build | tsup | Bundle TypeScript senza config complessa |
@@ -35,14 +36,23 @@ printer-booking/
 ├── AI_RULES.md
 ├── PLAN.md
 ├── package.json              ← script root (dev, test, build per entrambi)
+├── docker-compose.yml        ← 3 servizi: db, backend, frontend
+├── .env.example              ← variabili d'ambiente di esempio
+├── .dockerignore             ← esclusioni per Docker build
 │
 ├── backend/
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── vitest.config.ts
+│   ├── Dockerfile            ← immagine Node.js per il backend
+│   ├── drizzle.config.ts     ← configurazione Drizzle Kit (migrazioni)
 │   ├── src/
 │   │   ├── index.ts              ← entry point, avvia Express
-│   │   ├── db.ts                 ← setup SQLite + migrazioni
+│   │   ├── db/
+│   │   │   ├── schema.ts        ← Drizzle schema (tabelle, relazioni, enum)
+│   │   │   ├── index.ts         ← connessione pg + Drizzle instance
+│   │   │   ├── migrate.ts       ← runner migrazioni Drizzle
+│   │   │   └── seed.ts          ← seed admin + stampanti default
 │   │   ├── models/
 │   │   │   ├── printer.ts        ← Zod schema stampante
 │   │   │   ├── booking.ts        ← Zod schema prenotazione
@@ -65,13 +75,13 @@ printer-booking/
 │   │       ├── booking.service.test.ts   ← test logica prenotazioni
 │   │       ├── printer.service.test.ts   ← test logica stampanti
 │   │       └── helpers.ts                ← factory e utility test
-│   └── data/
-│       └── fablab.db             ← file SQLite (gitignored)
+│   └── drizzle/                  ← cartella migrazioni generate da drizzle-kit
 │
 └── frontend/
     ├── package.json
     ├── vite.config.ts
     ├── tsconfig.json
+    ├── Dockerfile            ← build Vite + serve con Nginx
     ├── index.html
     ├── src/
     │   ├── App.tsx               ← Refine app con risorse e routing
@@ -132,38 +142,70 @@ Il backend deve essere compatibile con il Refine REST data provider (`@refinedev
 - **Seed admin**: alla prima migrazione, creare un utente admin di default (email e password configurabili via env)
 - **Token payload**: `{ userId, role, email }`, scadenza configurabile (default: 24h)
 
-## Schema database
+## Schema database (PostgreSQL)
 
 ```sql
 CREATE TABLE users (
-  id TEXT PRIMARY KEY,
-  email TEXT NOT NULL UNIQUE,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  name TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('admin', 'user')),
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  name VARCHAR(255) NOT NULL,
+  role VARCHAR(10) NOT NULL DEFAULT 'user' CHECK(role IN ('admin', 'user')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE printers (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'maintenance'))
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL UNIQUE,
+  status VARCHAR(15) NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'maintenance'))
 );
 
 CREATE TABLE bookings (
-  id TEXT PRIMARY KEY,
-  printer_id TEXT NOT NULL REFERENCES printers(id),
-  user_id TEXT NOT NULL REFERENCES users(id),
-  start_time TEXT NOT NULL,  -- ISO 8601
-  end_time TEXT NOT NULL,    -- ISO 8601
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  printer_id UUID NOT NULL REFERENCES printers(id),
+  user_id UUID NOT NULL REFERENCES users(id),
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ NOT NULL,
   notes TEXT DEFAULT '',
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CHECK(start_time < end_time)
 );
 
 CREATE INDEX idx_bookings_printer_time ON bookings(printer_id, start_time, end_time);
 CREATE INDEX idx_bookings_user ON bookings(user_id);
 ```
+
+Lo schema SQL sopra è di riferimento. L'implementazione effettiva usa **Drizzle ORM** con schema TypeScript in `backend/src/db/schema.ts`. Le migrazioni SQL vengono generate automaticamente da `drizzle-kit generate`.
+
+## Docker Compose
+
+Il progetto usa Docker Compose per orchestrare 3 servizi:
+
+| Servizio | Immagine | Porta | Descrizione |
+|----------|----------|-------|-------------|
+| `db` | `postgres:17-alpine` | 5432 | Database PostgreSQL con volume persistente |
+| `backend` | Build da `./backend/Dockerfile` | 3000 | API Express + Node.js |
+| `frontend` | Build da `./frontend/Dockerfile` | 5173→80 | App React servita da Nginx |
+
+Dipendenze:
+- `backend` dipende da `db` (healthcheck `pg_isready`)
+- `frontend` dipende da `backend`
+
+Variabili d'ambiente principali (definite in `.env`):
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` — credenziali DB
+- `DATABASE_URL` — connection string per il backend (`postgresql://user:password@db:5432/dbname`)
+- `JWT_SECRET` — secret per firma JWT
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD` — credenziali admin di default per il seed
+
+## File Docker
+
+| File | Descrizione |
+|------|-------------|
+| `docker-compose.yml` | Orchestrazione dei 3 servizi (db, backend, frontend) |
+| `backend/Dockerfile` | Multi-stage build: install deps → build TypeScript → run |
+| `frontend/Dockerfile` | Multi-stage build: install deps → build Vite → serve con Nginx |
+| `.dockerignore` | Esclude `node_modules`, `.git`, file di specifica, etc. |
+| `.env.example` | Template variabili d'ambiente (non committare `.env`) |
 
 ## Endpoint API
 

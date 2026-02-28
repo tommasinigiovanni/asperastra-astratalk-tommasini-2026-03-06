@@ -34,6 +34,9 @@ Se ti ritrovi con codice senza test, fermati e scrivi il test.
 Dopo ogni modifica significativa, esegui il loop completo:
 
 ```
+# Prerequisito: PostgreSQL deve essere attivo
+docker compose up -d db         → avvia il container PostgreSQL
+
 # Backend
 cd backend && npm test          → tutti i test devono passare
 cd backend && npm run lint      → zero errori, zero warning
@@ -42,6 +45,9 @@ cd backend && npm run build     → compilazione TypeScript pulita
 # Frontend
 cd frontend && npm test         → tutti i test devono passare
 cd frontend && npm run build    → compilazione Vite pulita
+
+# Verifica finale (prima di milestone o merge)
+docker compose up --build       → tutti i servizi partono senza errori
 ```
 
 Se un qualsiasi step fallisce, correggi PRIMA di procedere al passo successivo del piano.

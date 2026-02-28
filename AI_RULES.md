@@ -56,7 +56,8 @@
   - User cancella propria prenotazione → OK
   - User cancella prenotazione altrui → 403
   - Admin cancella prenotazione di un user → OK
-- Usa database in-memory per i test (`:memory:`)
+- Usa un database di test PostgreSQL dedicato (container o DB separato via variabile d'ambiente `DATABASE_URL_TEST`)
+- Ogni test suite fa setup/teardown con transazioni o truncate delle tabelle
 - Ogni test deve essere indipendente: setup e teardown propri
 
 ## Stile codice

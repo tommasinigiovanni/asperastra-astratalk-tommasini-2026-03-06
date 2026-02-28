@@ -12,7 +12,7 @@ API REST per prenotare slot temporali sulle stampanti 3D. Gestione conflitti, va
 
 - API per creare, leggere, aggiornare e cancellare prenotazioni
 - Validazione rigorosa degli slot (durata, sovrapposizioni, orari)
-- Un database locale SQLite per persistenza
+- Un database PostgreSQL per persistenza (containerizzato con Docker)
 - Pensato per un singolo FabLab con più stampanti
 
 ## Cosa il sistema NON È

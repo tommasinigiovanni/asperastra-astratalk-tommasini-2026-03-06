@@ -1,27 +1,32 @@
 # PLAN — Step-by-step implementazione
 
-## Step 1: Setup progetto
+## Step 1: Setup progetto + Docker
 
-- Inizializza `package.json` con TypeScript, Express, better-sqlite3, Zod, Vitest, tsup
+- Crea `docker-compose.yml` con 3 servizi (db PostgreSQL, backend, frontend) come da ARCHITECTURE.md
+- Crea `backend/Dockerfile` (multi-stage: deps → build → run)
+- Crea `frontend/Dockerfile` (multi-stage: deps → build Vite → Nginx)
+- Crea `.dockerignore` e `.env.example`
+- Inizializza `backend/package.json` con TypeScript, Express, `drizzle-orm`, `pg`, `@types/pg`, Zod, Vitest, tsup
+- Aggiungi `drizzle-kit` come devDependency
 - Configura `tsconfig.json` con strict mode
 - Configura `vitest.config.ts`
 - Crea struttura folder come da ARCHITECTURE.md
 - Aggiungi script npm: `test`, `lint`, `build`, `dev`
-- **Verifica:** `npm install` senza errori, `npm run build` compila
+- **Verifica:** `npm install` senza errori, `npm run build` compila, `docker compose up -d db` avvia PostgreSQL
 
-Commit: `chore(setup): initialize project with TypeScript and Vitest`
+Commit: `chore(setup): initialize project with TypeScript, Drizzle, and Docker Compose`
 
-## Step 2: Database e schema
+## Step 2: Database Drizzle ORM + PostgreSQL
 
-- Implementa `src/db.ts` con setup SQLite e funzione di migrazione
-- Crea tabelle `printers` e `bookings` come da ARCHITECTURE.md
-- Funzione `createDb()` che accetta path (o `:memory:` per test)
-- Crea tabella `users` con ruoli admin/user come da ARCHITECTURE.md
-- Seed di un admin di default (email/password da env o fallback)
-- Seed di 2 stampanti di default ("Prusa MK4 #1", "Prusa MK4 #2")
-- **Verifica:** test che il database si crea e le tabelle esistono
+- Implementa `src/db/schema.ts` con tabelle Drizzle (users, printers, bookings) — UUID, timestamps, enum/check
+- Implementa `src/db/index.ts` con connessione pg pool + Drizzle instance (usa `DATABASE_URL` da env)
+- Implementa `src/db/migrate.ts` — runner migrazioni Drizzle
+- Implementa `src/db/seed.ts` — seed admin di default (email/password da env) + 2 stampanti ("Prusa MK4 #1", "Prusa MK4 #2")
+- Crea `drizzle.config.ts` nella root backend
+- Genera prima migrazione con `npx drizzle-kit generate`
+- **Verifica:** `docker compose up -d db` poi test connessione e verifica che tabelle esistono
 
-Commit: `feat(db): add SQLite schema and migration`
+Commit: `feat(db): add Drizzle ORM schema and PostgreSQL migration`
 
 ## Step 3: Modelli Zod
 
@@ -108,12 +113,14 @@ Commit: `chore(docs): finalize backend setup`
 
 ## Step 9: Ristrutturazione monorepo
 
-- Spostare tutto il codice backend esistente nella cartella `/backend`
+- Spostare tutto il codice backend esistente nella cartella `/backend` (se non già strutturato così)
 - Creare `/frontend` con Vite + React + Refine + Ant Design (`npm create refine-app` o setup manuale)
+- Creare `frontend/Dockerfile` se non già presente
 - Aggiungere CORS al backend Express (pacchetto `cors`)
 - Aggiungere header `x-total-count` alle response delle liste nel backend
 - Creare `package.json` root con script per avviare entrambi (`dev`, `test`, `build`)
-- **Verifica:** `cd backend && npm test` passa, `cd frontend && npm run build` compila
+- Verificare che `docker-compose.yml` (creato nello Step 1) includa correttamente tutti e 3 i servizi
+- **Verifica:** `cd backend && npm test` passa, `cd frontend && npm run build` compila, `docker compose build` senza errori
 
 Commit: `chore(monorepo): restructure project into backend and frontend`
 Commit: `feat(backend): add CORS and x-total-count header for Refine compatibility`
@@ -187,7 +194,7 @@ Commit: `test(ui): add cancellation and notification tests`
 
 ## Step 16: Verifica finale fullstack
 
-- Avviare backend (`cd backend && npm run dev`) e frontend (`cd frontend && npm run dev`)
+- Avviare tutto con `docker compose up --build` — verificare che tutti e 3 i servizi partono senza errori
 - Test E2E manuale del flusso completo:
   1. Login come admin
   2. Creare un utente con ruolo user
@@ -200,8 +207,9 @@ Commit: `test(ui): add cancellation and notification tests`
   9. Cancellare prenotazione
   10. Tentare accesso a gestione stampanti → non visibile/403
   11. Login come admin, mettere stampante in maintenance → prenotazione rifiutata
-- Eseguire `npm test` in entrambe le cartelle
+- Eseguire `npm test` in entrambe le cartelle (con PostgreSQL di test attivo)
 - Eseguire `npm run build` in entrambe le cartelle
+- Verificare `docker compose up --build` — tutti i servizi healthy
 - **Se tutto verde:** progetto fullstack completato
 
 Commit: `chore(docs): finalize fullstack project`
