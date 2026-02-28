@@ -54,6 +54,29 @@
 - Non committare mai con test falliti
 - Non committare file temporanei, .db, node_modules
 
+## Frontend — Testing
+
+- Componenti React testati con Vitest + React Testing Library
+- Test per ogni pagina CRUD: verifica rendering tabella, submit form, gestione errori
+- Test per il componente calendario: rendering slot, click su slot libero, feedback su slot occupato
+- Mock del data provider Refine nei test (non fare chiamate HTTP reali)
+- Ogni componente custom (non pagine Refine standard) DEVE avere almeno un test
+
+## Frontend — Stile codice
+
+- Componenti funzionali — no class components
+- Usare hooks Refine (`useTable`, `useForm`, `useShow`, `useList`) per interazione dati
+- No logica di business nei componenti: delegare a hooks custom o utility functions
+- TypeScript strict mode — no `any`, props tipizzate
+- Un componente per file, nome file = nome componente in lowercase
+
+## Frontend — Commit
+
+- Stessi tipi del backend: `feat`, `fix`, `test`, `refactor`, `chore`
+- Scope `(ui)` per pagine e layout generali: `feat(ui): add printer list page`
+- Scope `(calendar)` per componente calendario: `feat(calendar): add booking calendar with day view`
+- Scope `(provider)` per data provider: `feat(provider): configure Refine REST data provider`
+
 ## Logging
 
 - Log strutturato su operazioni: creazione, cancellazione, rifiuto overlap

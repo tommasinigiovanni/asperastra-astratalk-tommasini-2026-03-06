@@ -3,7 +3,7 @@
 ## Identità progetto
 
 Sistema di prenotazione slot per stampanti 3D di un FabLab.
-Backend API REST. Niente frontend in questo scope.
+Backend API REST + Frontend React (Refine + Ant Design). Monorepo con `/backend` e `/frontend`.
 
 ## Regola zero: pensa prima di scrivere
 
@@ -33,9 +33,14 @@ Se ti ritrovi con codice senza test, fermati e scrivi il test.
 Dopo ogni modifica significativa, esegui il loop completo:
 
 ```
-npm test          → tutti i test devono passare
-npm run lint      → zero errori, zero warning
-npm run build     → compilazione TypeScript pulita
+# Backend
+cd backend && npm test          → tutti i test devono passare
+cd backend && npm run lint      → zero errori, zero warning
+cd backend && npm run build     → compilazione TypeScript pulita
+
+# Frontend
+cd frontend && npm test         → tutti i test devono passare
+cd frontend && npm run build    → compilazione Vite pulita
 ```
 
 Se un qualsiasi step fallisce, correggi PRIMA di procedere al passo successivo del piano.
@@ -59,17 +64,24 @@ Committa solo dopo che il loop di verifica è passato.
 
 Rispetta la struttura definita in `ARCHITECTURE.md`. Se hai dubbi su dove mettere qualcosa, rileggi quel file.
 
-Regole di base:
-- Logica di business → `src/services/` (mai nei route handler)
-- Validazione input → Zod schemas in `src/models/`
+Regole backend:
+- Logica di business → `backend/src/services/` (mai nei route handler)
+- Validazione input → Zod schemas in `backend/src/models/`
 - Route handlers → sottili, delegano ai services
-- Test → `src/tests/`, uno per ogni service
+- Test → `backend/src/tests/`, uno per ogni service
+
+Regole frontend:
+- Pagine CRUD → `frontend/src/pages/` (una cartella per risorsa)
+- Componenti riusabili → `frontend/src/components/`
+- No logica di business nei componenti React — delegare a hooks custom e utility
+- Data provider e config Refine → `frontend/src/providers/`
+- Test → `frontend/src/tests/`, organizzati per pages e components
 
 ## Cosa NON fare
 
 - Non aggiungere feature non presenti nel PRD.md
 - Non installare dipendenze non previste dall'architettura
-- Non creare UI/frontend (fuori scope)
+- Non mettere logica di business nei componenti React (delegare a hooks e service)
 - Non saltare step del PLAN.md
 - Non ignorare test falliti per andare avanti
 - Non fare commit con test rotti

@@ -20,7 +20,6 @@ API REST per prenotare slot temporali sulle stampanti 3D. Gestione conflitti, va
 - Non è un sistema di autenticazione utenti (no login, no password)
 - Non gestisce pagamenti o fatturazione
 - Non monitora lo stato fisico della stampante (filamento, temperatura)
-- Non ha frontend/UI (solo API)
 - Non invia notifiche (email, SMS, push)
 - Non gestisce prenotazioni ricorrenti
 
@@ -52,3 +51,26 @@ Membri del FabLab che devono prenotare tempo-macchina. Identificati solo per nom
 4. Non si può prenotare nel passato
 5. Una stampante in `maintenance` non accetta prenotazioni
 6. Cancellazione possibile solo se mancano più di 15 minuti all'inizio
+
+## Interfaccia utente
+
+### Vista Dashboard
+- Lista stampanti con stato corrente (active/maintenance)
+- Accesso rapido alla prenotazione per ogni stampante
+
+### Vista Calendario
+- Calendario per stampante con slot occupati e liberi
+- Click su uno slot libero per avviare la prenotazione
+
+### Vista Prenotazioni
+- Tabella CRUD con tutte le prenotazioni
+- Filtri per stampante, data, utente
+- Dettaglio prenotazione con possibilità di cancellazione
+
+### Vista Gestione Stampanti
+- Tabella CRUD per admin: crea stampante, cambia stato (active/maintenance)
+
+### Comportamento UI
+- Feedback visuale su errori: overlap (409), stampante in maintenance (400), cancellazione troppo tardi (409)
+- Notifiche chiare per operazioni riuscite e fallite
+- Form con validazione client-side coerente con le regole di business

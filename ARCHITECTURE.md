@@ -2,6 +2,8 @@
 
 ## Stack tecnologico
 
+### Backend
+
 | Layer | Tecnologia | Motivo |
 |-------|-----------|--------|
 | Runtime | Node.js + TypeScript | Type safety, ecosystem maturo |
@@ -11,7 +13,18 @@
 | Test | Vitest | Veloce, compatibile TypeScript nativo |
 | Build | tsup | Bundle TypeScript senza config complessa |
 
-## Struttura folder
+### Frontend
+
+| Layer | Tecnologia | Motivo |
+|-------|-----------|--------|
+| Framework | React | Ecosystem, community, compatibilità Refine |
+| Admin framework | Refine | CRUD scaffolding, data provider, routing incluso |
+| Build | Vite | Dev server veloce, HMR istantaneo |
+| UI library | Ant Design | Componenti pronti (tabelle, form, layout) |
+| Date handling | dayjs | Leggero, usato da Ant Design DatePicker e calendario |
+| Test | Vitest + React Testing Library | Consistenza con backend, testing componenti React |
+
+## Struttura folder — Monorepo
 
 ```
 printer-booking/
@@ -20,28 +33,68 @@ printer-booking/
 ├── ARCHITECTURE.md
 ├── AI_RULES.md
 ├── PLAN.md
-├── package.json
-├── tsconfig.json
-├── vitest.config.ts
-├── src/
-│   ├── index.ts              ← entry point, avvia Express
-│   ├── db.ts                 ← setup SQLite + migrazioni
-│   ├── models/
-│   │   ├── printer.ts        ← Zod schema stampante
-│   │   └── booking.ts        ← Zod schema prenotazione
-│   ├── services/
-│   │   ├── printer.service.ts    ← CRUD stampanti
-│   │   └── booking.service.ts    ← CRUD prenotazioni + validazione overlap
-│   ├── routes/
-│   │   ├── printer.routes.ts     ← endpoint /api/printers
-│   │   └── booking.routes.ts     ← endpoint /api/bookings
-│   └── tests/
-│       ├── booking.service.test.ts   ← test logica prenotazioni
-│       ├── printer.service.test.ts   ← test logica stampanti
-│       └── helpers.ts                ← factory e utility test
-└── data/
-    └── fablab.db             ← file SQLite (gitignored)
+├── package.json              ← script root (dev, test, build per entrambi)
+│
+├── backend/
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vitest.config.ts
+│   ├── src/
+│   │   ├── index.ts              ← entry point, avvia Express
+│   │   ├── db.ts                 ← setup SQLite + migrazioni
+│   │   ├── models/
+│   │   │   ├── printer.ts        ← Zod schema stampante
+│   │   │   └── booking.ts        ← Zod schema prenotazione
+│   │   ├── services/
+│   │   │   ├── printer.service.ts    ← CRUD stampanti
+│   │   │   └── booking.service.ts    ← CRUD prenotazioni + validazione overlap
+│   │   ├── routes/
+│   │   │   ├── printer.routes.ts     ← endpoint /api/printers
+│   │   │   └── booking.routes.ts     ← endpoint /api/bookings
+│   │   └── tests/
+│   │       ├── booking.service.test.ts   ← test logica prenotazioni
+│   │       ├── printer.service.test.ts   ← test logica stampanti
+│   │       └── helpers.ts                ← factory e utility test
+│   └── data/
+│       └── fablab.db             ← file SQLite (gitignored)
+│
+└── frontend/
+    ├── package.json
+    ├── vite.config.ts
+    ├── tsconfig.json
+    ├── index.html
+    ├── src/
+    │   ├── App.tsx               ← Refine app con risorse e routing
+    │   ├── main.tsx              ← entry point React
+    │   ├── providers/
+    │   │   └── dataProvider.ts       ← config REST data provider per Refine
+    │   ├── pages/
+    │   │   ├── printers/
+    │   │   │   ├── list.tsx          ← tabella stampanti
+    │   │   │   ├── create.tsx        ← form creazione stampante
+    │   │   │   └── edit.tsx          ← form modifica stato stampante
+    │   │   └── bookings/
+    │   │       ├── list.tsx          ← tabella prenotazioni con filtri
+    │   │       ├── create.tsx        ← form creazione prenotazione
+    │   │       ├── calendar.tsx      ← vista calendario per stampante
+    │   │       └── show.tsx          ← dettaglio prenotazione
+    │   ├── components/
+    │   │   └── calendar/
+    │   │       └── BookingCalendar.tsx  ← componente calendario slot
+    │   └── tests/
+    │       ├── pages/                ← test pagine CRUD
+    │       └── components/           ← test componenti (calendario)
+    └── public/
 ```
+
+## Compatibilità Refine
+
+Il backend deve essere compatibile con il Refine REST data provider (`@refinedev/simple-rest`):
+
+- **CORS**: il backend deve abilitare CORS per permettere richieste dal dev server Vite (default `http://localhost:5173`)
+- **Header `x-total-count`**: le response delle liste (`GET /api/printers`, `GET /api/bookings`) devono includere l'header `x-total-count` con il numero totale di record, per la paginazione Refine
+- **Filtri query string**: il data provider invia filtri come `?_sort=field&_order=asc&_start=0&_end=10`. Il backend deve supportare questi parametri per liste paginate e ordinate
+- **Response format**: le liste restituiscono un array JSON diretto (non wrappato). Il totale va nell'header, non nel body
 
 ## Convenzioni
 
