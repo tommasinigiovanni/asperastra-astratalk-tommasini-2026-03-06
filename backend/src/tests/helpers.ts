@@ -16,7 +16,10 @@ export function createMockDb() {
   const returning = vi.fn(() => Promise.resolve(resolvedValue));
 
   const chain: Record<string, ReturnType<typeof vi.fn>> = {
-    from: vi.fn(function () { return Promise.resolve(resolvedValue); }),
+    from: vi.fn(function () {
+      const promise = Promise.resolve(resolvedValue);
+      return Object.assign(promise, { where: chain.where, limit: chain.limit });
+    }),
     where: vi.fn(function () { return Object.assign(Promise.resolve(resolvedValue), { returning }); }),
     values: vi.fn(function () { return { returning, onConflictDoNothing: vi.fn(() => ({ returning })) }; }),
     set: vi.fn(function () { return { where: chain.where }; }),
