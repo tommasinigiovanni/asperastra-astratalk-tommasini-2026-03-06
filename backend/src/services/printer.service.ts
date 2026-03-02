@@ -7,6 +7,11 @@ export async function listPrinters(db: Database) {
   return db.select().from(printers);
 }
 
+export async function getPrinterById(db: Database, id: string) {
+  const [printer] = await db.select().from(printers).where(eq(printers.id, id));
+  return printer ?? null;
+}
+
 export async function createPrinter(db: Database, input: CreatePrinterInput) {
   const [printer] = await db.insert(printers).values(input).returning();
   return printer;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createPrinterSchema, updatePrinterStatusSchema } from '../models/printer.js';
-import { listPrinters, createPrinter, updatePrinterStatus } from '../services/printer.service.js';
+import { listPrinters, getPrinterById, createPrinter, updatePrinterStatus } from '../services/printer.service.js';
 import { db } from '../db/index.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { applyRefineParams } from './refine.js';
@@ -16,6 +16,21 @@ router.get('/', async (req, res, next) => {
     const printers = await listPrinters(db);
     const result = applyRefineParams(req, res, printers);
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/printers/:id
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id as string;
+    const printer = await getPrinterById(db, id);
+    if (!printer) {
+      res.status(404).json({ error: 'Printer not found' });
+      return;
+    }
+    res.json(printer);
   } catch (err) {
     next(err);
   }
