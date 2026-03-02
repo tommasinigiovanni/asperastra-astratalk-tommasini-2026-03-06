@@ -1,4 +1,4 @@
-import { Refine, Authenticated } from '@refinedev/core';
+import { Refine, Authenticated, AccessControlProvider } from '@refinedev/core';
 import { ThemedLayoutV2, useNotificationProvider } from '@refinedev/antd';
 import routerProvider, { NavigateToResource, CatchAllNavigate } from '@refinedev/react-router';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router';
@@ -19,6 +19,26 @@ import { UserList } from './pages/users/list';
 import { UserCreate } from './pages/users/create';
 import { BookingCalendarPage } from './pages/bookings/calendar';
 
+const accessControlProvider: AccessControlProvider = {
+  can: async ({ resource, action }) => {
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const role = user?.role;
+
+    // Users resource: admin only
+    if (resource === 'users') {
+      return { can: role === 'admin' };
+    }
+
+    // Printer create/edit: admin only
+    if (resource === 'printers' && (action === 'create' || action === 'edit')) {
+      return { can: role === 'admin' };
+    }
+
+    return { can: true };
+  },
+};
+
 function App() {
   return (
     <BrowserRouter>
@@ -29,6 +49,7 @@ function App() {
             dataProvider={{ default: dataProvider }}
             authProvider={authProvider}
             notificationProvider={useNotificationProvider}
+            accessControlProvider={accessControlProvider}
             resources={[
               {
                 name: 'printers',
