@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { renderWithRefine } from '../helpers';
 import { BookingCalendar } from '../../components/calendar/BookingCalendar';
 
@@ -22,7 +22,7 @@ describe('BookingCalendar', () => {
     });
   });
 
-  it('should render time slots', async () => {
+  it('should show placeholder when no printer selected', async () => {
     renderWithRefine(<BookingCalendar />, {
       role: 'user',
       dataProvider: {
@@ -31,12 +31,13 @@ describe('BookingCalendar', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('08:00')).toBeInTheDocument();
-      expect(screen.getByText('18:00')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Seleziona una stampante per vedere la disponibilità/),
+      ).toBeInTheDocument();
     });
   });
 
-  it('should render date picker', async () => {
+  it('should render date picker and navigation', async () => {
     renderWithRefine(<BookingCalendar />, {
       role: 'user',
       dataProvider: {
@@ -45,7 +46,7 @@ describe('BookingCalendar', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('08:00')).toBeInTheDocument();
+      expect(screen.getByText('Seleziona stampante')).toBeInTheDocument();
     });
 
     // Date picker and navigation buttons should be present
