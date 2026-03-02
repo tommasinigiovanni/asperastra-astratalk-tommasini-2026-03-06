@@ -1,6 +1,6 @@
-import { Show, DateField, TextField } from '@refinedev/antd';
+import { Show, DateField, TextField, DeleteButton } from '@refinedev/antd';
 import { useShow } from '@refinedev/core';
-import { Typography } from 'antd';
+import { Typography, Space } from 'antd';
 
 const { Title } = Typography;
 
@@ -10,7 +10,28 @@ export const BookingShow = () => {
   const record = data?.data;
 
   return (
-    <Show isLoading={isLoading}>
+    <Show
+      isLoading={isLoading}
+      headerButtons={({ defaultButtons }) => (
+        <Space>
+          {defaultButtons}
+          <DeleteButton
+            recordItemId={record?.id}
+            errorNotification={(error) => {
+              const status = (error as { statusCode?: number })?.statusCode;
+              if (status === 409) {
+                return { message: 'Troppo tardi', description: 'Non puoi cancellare a meno di 15 minuti dall\'inizio', type: 'error' };
+              }
+              if (status === 403) {
+                return { message: 'Non autorizzato', description: 'Non puoi cancellare questa prenotazione', type: 'error' };
+              }
+              return { message: 'Errore', description: 'Cancellazione non riuscita', type: 'error' };
+            }}
+            successNotification={{ message: 'Prenotazione cancellata', description: 'La prenotazione è stata rimossa', type: 'success' }}
+          />
+        </Space>
+      )}
+    >
       <Title level={5}>Stampante ID</Title>
       <TextField value={record?.printerId} />
 
