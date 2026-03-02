@@ -9,8 +9,11 @@ import '@refinedev/antd/dist/reset.css';
 import { dataProvider } from './providers/dataProvider';
 import { authProvider } from './providers/authProvider';
 import { LoginPage } from './pages/login';
+import { PrinterList } from './pages/printers/list';
+import { PrinterCreate } from './pages/printers/create';
+import { PrinterEdit } from './pages/printers/edit';
 
-// Placeholder pages — will be implemented in Steps 11-14
+// Placeholder pages — will be implemented in Steps 12-14
 const PlaceholderPage = ({ title }: { title: string }) => <div>{title}</div>;
 
 function App() {
@@ -57,9 +60,9 @@ function App() {
                 }
               >
                 <Route index element={<NavigateToResource resource="printers" />} />
-                <Route path="/printers" element={<PlaceholderPage title="Stampanti" />} />
-                <Route path="/printers/create" element={<PlaceholderPage title="Nuova Stampante" />} />
-                <Route path="/printers/edit/:id" element={<PlaceholderPage title="Modifica Stampante" />} />
+                <Route path="/printers" element={<PrinterList />} />
+                <Route path="/printers/create" element={<PrinterCreate />} />
+                <Route path="/printers/edit/:id" element={<PrinterEdit />} />
                 <Route path="/bookings" element={<PlaceholderPage title="Prenotazioni" />} />
                 <Route path="/bookings/create" element={<PlaceholderPage title="Nuova Prenotazione" />} />
                 <Route path="/bookings/show/:id" element={<PlaceholderPage title="Dettaglio Prenotazione" />} />
