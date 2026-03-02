@@ -1,5 +1,6 @@
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import printerRoutes from './routes/printer.routes.js';
@@ -9,6 +10,10 @@ import { ServiceError } from './services/errors.js';
 const app = express();
 const port = process.env.PORT ?? 3000;
 
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  exposedHeaders: ['x-total-count'],
+}));
 app.use(express.json());
 
 // Health check

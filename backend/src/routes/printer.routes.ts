@@ -3,6 +3,7 @@ import { createPrinterSchema, updatePrinterStatusSchema } from '../models/printe
 import { listPrinters, createPrinter, updatePrinterStatus } from '../services/printer.service.js';
 import { db } from '../db/index.js';
 import { authenticate, authorize } from '../middleware/auth.js';
+import { applyRefineParams } from './refine.js';
 
 const router = Router();
 
@@ -10,10 +11,11 @@ const router = Router();
 router.use(authenticate);
 
 // GET /api/printers
-router.get('/', async (_req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const printers = await listPrinters(db);
-    res.json(printers);
+    const result = applyRefineParams(req, res, printers);
+    res.json(result);
   } catch (err) {
     next(err);
   }

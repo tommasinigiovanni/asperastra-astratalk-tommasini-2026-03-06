@@ -2,8 +2,8 @@ import { Router } from 'express';
 import { createUserSchema } from '../models/user.js';
 import { createUser, listUsers } from '../services/user.service.js';
 import { db } from '../db/index.js';
-import { authenticate } from '../middleware/auth.js';
-import { authorize } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { applyRefineParams } from './refine.js';
 
 const router = Router();
 
@@ -11,10 +11,11 @@ const router = Router();
 router.use(authenticate, authorize('admin'));
 
 // GET /api/users
-router.get('/', async (_req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
     const users = await listUsers(db);
-    res.json(users);
+    const result = applyRefineParams(req, res, users);
+    res.json(result);
   } catch (err) {
     next(err);
   }

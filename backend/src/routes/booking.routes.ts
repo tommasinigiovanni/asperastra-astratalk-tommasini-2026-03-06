@@ -3,6 +3,7 @@ import { createBookingSchema } from '../models/booking.js';
 import { createBooking, listBookings, cancelBooking, getAvailability } from '../services/booking.service.js';
 import { db } from '../db/index.js';
 import { authenticate } from '../middleware/auth.js';
+import { applyRefineParams } from './refine.js';
 
 const router = Router();
 
@@ -24,7 +25,8 @@ router.get('/', async (req, res, next) => {
     }
 
     const bookings = await listBookings(db, filters);
-    res.json(bookings);
+    const result = applyRefineParams(req, res, bookings);
+    res.json(result);
   } catch (err) {
     next(err);
   }
