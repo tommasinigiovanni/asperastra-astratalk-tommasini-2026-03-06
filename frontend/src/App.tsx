@@ -15,8 +15,10 @@ import { PrinterEdit } from './pages/printers/edit';
 import { BookingList } from './pages/bookings/list';
 import { BookingCreate } from './pages/bookings/create';
 import { BookingShow } from './pages/bookings/show';
+import { UserList } from './pages/users/list';
+import { UserCreate } from './pages/users/create';
 
-// Placeholder pages — will be implemented in Steps 13-14
+// Placeholder pages — will be implemented in Step 14
 const PlaceholderPage = ({ title }: { title: string }) => <div>{title}</div>;
 
 function App() {
@@ -70,8 +72,8 @@ function App() {
                 <Route path="/bookings/create" element={<BookingCreate />} />
                 <Route path="/bookings/show/:id" element={<BookingShow />} />
                 <Route path="/bookings/calendar" element={<PlaceholderPage title="Calendario" />} />
-                <Route path="/users" element={<PlaceholderPage title="Utenti" />} />
-                <Route path="/users/create" element={<PlaceholderPage title="Nuovo Utente" />} />
+                <Route path="/users" element={<UserList />} />
+                <Route path="/users/create" element={<UserCreate />} />
               </Route>
               <Route
                 element={
