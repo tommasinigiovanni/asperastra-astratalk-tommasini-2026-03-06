@@ -3,7 +3,7 @@ import { ThemedLayoutV2, useNotificationProvider } from '@refinedev/antd';
 import routerProvider, { NavigateToResource, CatchAllNavigate } from '@refinedev/react-router';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router';
 import { App as AntdApp, ConfigProvider } from 'antd';
-import { PrinterOutlined, CalendarOutlined, TeamOutlined } from '@ant-design/icons';
+import { PrinterOutlined, CalendarOutlined, TeamOutlined, ScheduleOutlined } from '@ant-design/icons';
 import '@refinedev/antd/dist/reset.css';
 
 import { dataProvider } from './providers/dataProvider';
@@ -64,6 +64,11 @@ function App() {
                 create: '/bookings/create',
                 show: '/bookings/show/:id',
                 meta: { icon: <CalendarOutlined /> },
+              },
+              {
+                name: 'calendar',
+                list: '/bookings/calendar',
+                meta: { icon: <ScheduleOutlined />, label: 'Calendario' },
               },
               {
                 name: 'users',
