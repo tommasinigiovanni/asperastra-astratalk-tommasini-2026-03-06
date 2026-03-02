@@ -17,9 +17,7 @@ import { BookingCreate } from './pages/bookings/create';
 import { BookingShow } from './pages/bookings/show';
 import { UserList } from './pages/users/list';
 import { UserCreate } from './pages/users/create';
-
-// Placeholder pages — will be implemented in Step 14
-const PlaceholderPage = ({ title }: { title: string }) => <div>{title}</div>;
+import { BookingCalendarPage } from './pages/bookings/calendar';
 
 function App() {
   return (
@@ -71,7 +69,7 @@ function App() {
                 <Route path="/bookings" element={<BookingList />} />
                 <Route path="/bookings/create" element={<BookingCreate />} />
                 <Route path="/bookings/show/:id" element={<BookingShow />} />
-                <Route path="/bookings/calendar" element={<PlaceholderPage title="Calendario" />} />
+                <Route path="/bookings/calendar" element={<BookingCalendarPage />} />
                 <Route path="/users" element={<UserList />} />
                 <Route path="/users/create" element={<UserCreate />} />
               </Route>
