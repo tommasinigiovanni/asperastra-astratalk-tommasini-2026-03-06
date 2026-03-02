@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createBookingSchema } from '../models/booking.js';
-import { createBooking, listBookings, cancelBooking, getAvailability } from '../services/booking.service.js';
+import { createBooking, getBookingById, listBookings, cancelBooking, getAvailability } from '../services/booking.service.js';
 import { db } from '../db/index.js';
 import { authenticate } from '../middleware/auth.js';
 import { applyRefineParams } from './refine.js';
@@ -64,6 +64,21 @@ router.get('/availability/:printerId', async (req, res, next) => {
     const date = typeof req.query.date === 'string' ? req.query.date : new Date().toISOString().slice(0, 10);
     const bookings = await getAvailability(db, req.params.printerId, date);
     res.json(bookings);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/bookings/:id — must be after /availability to avoid matching "availability" as :id
+router.get('/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id as string;
+    const booking = await getBookingById(db, id);
+    if (!booking) {
+      res.status(404).json({ error: 'Booking not found' });
+      return;
+    }
+    res.json(booking);
   } catch (err) {
     next(err);
   }

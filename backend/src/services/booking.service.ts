@@ -67,6 +67,11 @@ export async function createBooking(
   return booking;
 }
 
+export async function getBookingById(db: Database, id: string) {
+  const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
+  return booking ?? null;
+}
+
 export async function listBookings(
   db: Database,
   filters: { userId?: string; printerId?: string },
